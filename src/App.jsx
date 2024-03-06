@@ -1,15 +1,40 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
+import { sortPlacesByDistance } from './loc.js'
+
 
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [availablePlace, setAvailablePlaces] = useState([])
+
+  useEffect(() => {
+    const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || [];
+    const storedPlaces = storeIds.map((id) =>
+      AVAILABLE_PLACES.find((place) => id === place.id)
+    );
+    console.log("places", storedPlaces)
+    setPickedPlaces(storedPlaces)
+  }, [])
+
+  useEffect(() => {
+    //this would sortthe places based on distance from your locatin. A pop up would appear on the screen asking to access your current location 
+    // and based on that it would sort all teh vailable places
+    navigator.geolocation.getCurrentPosition((position) => {
+      const sortedPlaces = sortPlacesByDistance(
+        AVAILABLE_PLACES,
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      setAvailablePlaces(sortedPlaces)
+    })
+  }, [])
 
   function handleStartRemovePlace(id) {
     modal.current.open();
@@ -28,6 +53,11 @@ function App() {
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
       return [place, ...prevPickedPlaces];
     });
+
+    const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || []
+    if (storeIds.indexOf(id) === -1) {
+      localStorage.setItem('selectedPlaceForStorage', JSON.stringify([id, ...storeIds]))
+    }
   }
 
   function handleRemovePlace() {
@@ -35,6 +65,9 @@ function App() {
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
     modal.current.close();
+    const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || []
+    localStorage.setItem('selectedPlaceForStorage',
+      JSON.stringify(storeIds.filter((id) => id !== selectedPlace.current)))
   }
 
   return (
@@ -63,7 +96,8 @@ function App() {
         />
         <Places
           title="Available Places"
-          places={AVAILABLE_PLACES}
+          places={availablePlace}
+          fallbackText="Sorting places based on your current location ..."
           onSelectPlace={handleSelectPlace}
         />
       </main>
