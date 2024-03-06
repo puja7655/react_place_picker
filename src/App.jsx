@@ -7,21 +7,17 @@ import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import { sortPlacesByDistance } from './loc.js'
 
+const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || [];
+const storedPlaces = storeIds.map((id) =>
+  AVAILABLE_PLACES.find((place) => id === place.id)
+);
 
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
-  const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
   const [availablePlace, setAvailablePlaces] = useState([])
 
-  useEffect(() => {
-    const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || [];
-    const storedPlaces = storeIds.map((id) =>
-      AVAILABLE_PLACES.find((place) => id === place.id)
-    );
-    console.log("places", storedPlaces)
-    setPickedPlaces(storedPlaces)
-  }, [])
 
   useEffect(() => {
     //this would sortthe places based on distance from your locatin. A pop up would appear on the screen asking to access your current location 
