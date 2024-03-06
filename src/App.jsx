@@ -7,15 +7,17 @@ import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import { sortPlacesByDistance } from './loc.js'
 
+//I am using it outside the app function as i do not want to run it everytime rednering happens. It would save us performance
+//even though it is a side effect , i am not putting it in useEffect as it run synchrnously and running it once in the render cycle would do the job
 const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || [];
 const storedPlaces = storeIds.map((id) =>
   AVAILABLE_PLACES.find((place) => id === place.id)
 );
 
 function App() {
-  const modal = useRef();
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
+  const [isModalOpen, setIsModalOPen] = useState(false)
   const [availablePlace, setAvailablePlaces] = useState([])
 
 
@@ -33,12 +35,12 @@ function App() {
   }, [])
 
   function handleStartRemovePlace(id) {
-    modal.current.open();
+    setIsModalOPen(true)
     selectedPlace.current = id;
   }
 
   function handleStopRemovePlace() {
-    modal.current.close();
+    setIsModalOPen(false)
   }
 
   function handleSelectPlace(id) {
@@ -60,15 +62,17 @@ function App() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
-    modal.current.close();
+    setIsModalOPen(false)
     const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || []
     localStorage.setItem('selectedPlaceForStorage',
       JSON.stringify(storeIds.filter((id) => id !== selectedPlace.current)))
   }
 
+  //prop onClose is added because dialog can also be closed by 'esc' key from keyboard in that case dialog would disappear but the state passed via prop (i.e isModalOpen state) will not be set to false
+  //therefor modal can not be open again because the state value is still true- the UI is not in sync with state anymore
   return (
     <>
-      <Modal ref={modal}>
+      <Modal open={isModalOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
