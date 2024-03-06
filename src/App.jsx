@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState ,useCallback} from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
@@ -58,7 +58,8 @@ function App() {
     }
   }
 
-  function handleRemovePlace() {
+  //use useCallback() hook when passing function as dependency in useEffect
+  const handleRemovePlace = useCallback(function handleRemovePlace() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
@@ -66,7 +67,7 @@ function App() {
     const storeIds = JSON.parse(localStorage.getItem('selectedPlaceForStorage')) || []
     localStorage.setItem('selectedPlaceForStorage',
       JSON.stringify(storeIds.filter((id) => id !== selectedPlace.current)))
-  }
+  }, [])
 
   //prop onClose is added because dialog can also be closed by 'esc' key from keyboard in that case dialog would disappear but the state passed via prop (i.e isModalOpen state) will not be set to false
   //therefor modal can not be open again because the state value is still true- the UI is not in sync with state anymore
